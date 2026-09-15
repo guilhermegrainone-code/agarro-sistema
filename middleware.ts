@@ -23,6 +23,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Tudo, exceto arquivos estáticos do Next
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Tudo, exceto arquivos estáticos (Next, ícones, manifesto, fotos) — o iPhone
+  // precisa baixar o ícone e o manifesto sem estar logado.
+  matcher: ["/((?!_next/static|_next/image|.*\\.(?:png|jpg|jpeg|svg|ico|webmanifest)$).*)"],
 };
