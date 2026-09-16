@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { compressImage } from "@/lib/image";
 
 type VariantForm = { id?: string; size: string; color: string; stock: number };
 
@@ -48,15 +49,18 @@ export function ProductForm({ initial }: { initial?: ProductFormValue }) {
     setUploading(true);
     setError("");
     try {
+      const compressed = await compressImage(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error);
       setImages((current) => [...current, data.url]);
-    } catch {
+    } catch (err) {
       setError(
-        "Falha ao enviar a foto. Confira se o Blob Store está conectado ao projeto na Vercel.",
+        err instanceof Error && err.message
+          ? err.message
+          : "Não foi possível enviar a foto. Tente de novo; se continuar, avise quem cuida do sistema.",
       );
     } finally {
       setUploading(false);
