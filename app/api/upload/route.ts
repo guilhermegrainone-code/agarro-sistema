@@ -6,7 +6,11 @@ export async function POST(request: NextRequest) {
   const session = getSessionFromCookies();
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  // A Vercel às vezes cria a variável com prefixo (ex.: MEU_STORE_READ_WRITE_TOKEN);
+  // aceitamos qualquer nome que termine em READ_WRITE_TOKEN.
+  const tokenKey = Object.keys(process.env).find((k) => k.endsWith("READ_WRITE_TOKEN"));
+  const token = tokenKey ? process.env[tokenKey] : undefined;
+  if (!token) {
     return NextResponse.json(
       { error: "O armazenamento de fotos ainda não foi configurado (Vercel → Storage → Blob → conectar ao projeto)." },
       { status: 503 },
@@ -20,6 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const blob = await put(`produtos/${Date.now()}-${file.name}`, file, {
       access: "public",
+      token,
     });
     return NextResponse.json({ url: blob.url });
   } catch (error) {
